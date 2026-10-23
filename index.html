@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f0e8">
   <meta name="description" content="A field guide to skateboarding: the culture, the setup, the spots, and the next trick. Made for everyone who wants to roll.">
+  <meta name="rollcall-api-base" content="http://localhost:4173">
   <title>Roll Call — Skateboarding for everyone</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,12 +14,19 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="wordmark" href="#home" aria-label="Roll Call home"><span class="mark">R</span> ROLL CALL<span class="wordmark-period">.</span></a>
-    <nav class="nav-links" aria-label="Main navigation">
-      <a href="#culture">The culture</a><a href="#learn">Get rolling</a><a href="#setup">Your setup</a>
+    <div class="topbar-brand"><a class="wordmark" href="#home" aria-label="Roll Call home"><span class="mark">R</span> ROLL CALL<span class="wordmark-period">.</span></a></div>
+    <nav class="nav-links" id="primary-navigation" aria-label="Main navigation">
+      <div class="mobile-nav-heading"><span>ROLL CALL / QUICK LINKS</span><span aria-hidden="true">✳</span></div>
+      <button class="account-button mobile-account-button" type="button" data-account-open><svg class="user-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg><span>MY ACCOUNT</span><span class="nav-arrow" aria-hidden="true">↗</span></button>
+      <a href="#culture"><span class="nav-number">01</span><span>The culture</span><span class="nav-arrow" aria-hidden="true">↗</span></a>
+      <a href="#learn"><span class="nav-number">02</span><span>Get rolling</span><span class="nav-arrow" aria-hidden="true">↗</span></a>
+      <a href="#setup"><span class="nav-number">03</span><span>Your setup</span><span class="nav-arrow" aria-hidden="true">↗</span></a>
+      <a href="#shop"><span class="nav-number">04</span><span>Shop boards</span><span class="nav-arrow" aria-hidden="true">↗</span></a>
     </nav>
     <a class="nav-cta" href="#learn">Find your first trick <span>↗</span></a>
-    <button class="menu-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
+    <button class="account-button desktop-account" type="button" data-account-open aria-label="Open your account"><svg class="user-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg><span class="account-label">ACCOUNT</span></button>
+    <button class="bag-button" type="button" aria-label="Open shopping bag">BAG <span class="bag-count">0</span></button>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-controls="primary-navigation" aria-expanded="false"><span></span><span></span></button>
   </header>
 
   <main>
@@ -78,6 +86,13 @@
       <div class="board-signoff"><span>BUILT TO BE RIDDEN, NOT HUNG ON A WALL.</span><span>NOW GO FIND YOUR LINE. <b>✳</b></span></div>
     </section>
 
+    <section class="shop section-wrap" id="shop">
+      <div class="section-kicker"><span>04 / THE ROLL CALL SHOP</span><span>GOOD GEAR. NO GATEKEEPING.</span></div>
+      <div class="shop-heading"><div><p class="setup-overline">PICK YOUR RIDE</p><h2>Boards built<br>to <span class="orange">get out there.</span></h2></div><p>First board or next favorite, find a setup that feels like yours. Curated for the street, the park, and everywhere in between.</p></div>
+      <div class="shop-grid" aria-live="polite"><p class="shop-loading">Loading boards from the catalog…</p></div>
+      <div class="shop-foot"><span>FREE SHIPPING ON ORDERS OVER $100</span><span>NEED A HAND? <a href="#setup">START WITH THE SETUP GUIDE ↗</a></span></div>
+    </section>
+
     <section class="closing"><div class="closing-top"><span>NO PERFECT WAY TO SKATE.</span><span>JUST YOUR WAY. &nbsp;✳</span></div><h2>SEE YOU<br><span>OUT THERE.</span></h2><a href="#home" class="button button-light">Back to the top <span>↑</span></a><div class="closing-doodle">✳</div></section>
   </main>
 
@@ -93,6 +108,7 @@
         <a href="#culture">The culture <b>↗</b></a>
         <a href="#learn">Get rolling <b>↗</b></a>
         <a href="#setup">Know your board <b>↗</b></a>
+        <a href="#shop">Shop boards <b>↗</b></a>
       </nav>
       <div class="footer-credit-block">
         <span class="footer-label">CREDITS</span>
@@ -103,18 +119,30 @@
     </div>
     <div class="footer-bottom"><span>© 2026 ROLL CALL</span><span>SKATE ON YOUR TERMS.</span><a href="#home">BACK TO TOP ↑</a></div>
   </footer>
+  <div class="commerce-layer" id="commerceLayer" aria-hidden="true"></div>
+  <script src="https://js.paystack.co/v2/inline.js" defer></script>
+  <script src="shop.js" defer></script>
+  <script src="account.js" defer></script>
   <script>
     const menuButton = document.querySelector('.menu-toggle');
     const nav = document.querySelector('.nav-links');
     menuButton.addEventListener('click', () => {
       const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
       menuButton.setAttribute('aria-expanded', String(!isOpen));
+      menuButton.setAttribute('aria-label', isOpen ? 'Open menu' : 'Close menu');
       nav.classList.toggle('is-open', !isOpen);
     });
     nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-      nav.classList.remove('is-open'); menuButton.setAttribute('aria-expanded', 'false');
+      nav.classList.remove('is-open'); menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Open menu');
     }));
-    const revealItems = document.querySelectorAll('.hero-copy, .hero-visual, .culture-grid, .culture-card, .learn-image, .learn-content, .setup-heading, .part-card, .closing h2, .closing .button');
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { nav.classList.remove('is-open'); menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Open menu'); }
+    });
+    document.addEventListener('click', event => {
+      if (event.target.closest('.mobile-account-button')) { nav.classList.remove('is-open'); menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Open menu'); }
+      if (!event.target.closest('.topbar') && menuButton.getAttribute('aria-expanded') === 'true') { nav.classList.remove('is-open'); menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Open menu'); }
+    });
+    const revealItems = document.querySelectorAll('.hero-copy, .hero-visual, .culture-grid, .culture-card, .learn-image, .learn-content, .setup-heading, .part-card, .shop-heading, .shop-card, .closing h2, .closing .button');
     revealItems.forEach(item => item.dataset.reveal = '');
     document.body.classList.add('motion-ready');
     if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
