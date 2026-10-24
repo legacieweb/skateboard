@@ -19,7 +19,7 @@ for (const [key, value] of Object.entries(process.env)) if (value !== undefined)
 
 const config = {
   port: Number(env.PORT || 4173),
-  host: env.HOST || '127.0.0.1',
+  host: env.HOST || '0.0.0.0',
   baseUrl: (env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || `http://localhost:${env.PORT || 4173}`).replace(/\/$/, ''),
   frontendUrl: (env.FRONTEND_URL || '').replace(/\/$/, ''),
   corsOrigin: env.CORS_ORIGIN || '',

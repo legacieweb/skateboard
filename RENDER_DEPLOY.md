@@ -1,24 +1,27 @@
 # Deploy Roll Call on Render
 
-This repository deploys two Render services from `render.yaml`: a Node API and a static storefront. The static build reads the API service URL and writes it into the storefront's `rollcall-api-base` setting. The API gets the storefront URL for CORS and account/payment redirects.
+The backend API is the existing Render service at `https://skateboard-wz0h.onrender.com`. The `render.yaml` deploys the static storefront separately and configures its production API URL to that backend.
 
-## Deploy
+## Redeploy the backend
 
-1. Commit and push the repository, including `render.yaml`, `build-static.js`, and the repaired `package.json`, to the GitHub branch you want Render to deploy.
-2. In Render, choose **New + → Blueprint**, connect `legacieweb/skateboard`, and select the branch. Render will read `render.yaml` and create both services.
-3. Enter the requested secret values in the Blueprint form:
-   - `IYONICDB_API_KEY` from your IyonicDB project.
-   - `IYONIC_MAILER_API_KEY` and `MAIL_FROM_EMAIL` from your verified IyonicMailer sender setup.
-   - `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY` for the Paystack account.
-   - `ADMIN_EMAIL` and a unique `ADMIN_PASSWORD` of at least 14 characters.
-4. Apply the Blueprint and wait for both services to finish deploying. The Node service health check is `/api/health`; open the static service's `onrender.com` URL to use the shop.
-5. Once the admin account has been provisioned, change `ADMIN_BOOTSTRAP_ENABLED` to `false` in the API service's Environment settings and redeploy. This prevents startup from resetting the admin password to the configured bootstrap password.
-6. In Paystack, configure the webhook URL as `https://<your-api-service>.onrender.com/api/payments/webhook`.
+The supplied startup log shows the server listening on localhost. Render needs the Node server to listen on all interfaces. This repository now defaults `HOST` to `0.0.0.0`; push the updated `server.js` and redeploy the existing backend service. Keep Render's assigned `PORT` setting intact.
 
-The Render URLs are connected automatically through Blueprint service references. Do not set a localhost API URL for production. Keep API keys and admin credentials in Render's Environment settings; do not commit `.env` or paste secrets into `render.yaml`.
+In the backend service's Render Environment settings, set:
 
-## Deployment notes
+- `FRONTEND_URL` to the static storefront's `onrender.com` URL after it is created.
+- `CORS_ORIGIN` to the same exact storefront origin, with no trailing slash.
+- Provider configuration: `IYONICDB_API_KEY`, `IYONIC_MAILER_API_KEY`, `MAIL_FROM_EMAIL`, `PAYSTACK_PUBLIC_KEY`, and `PAYSTACK_SECRET_KEY`.
+- `ADMIN_EMAIL` and a unique `ADMIN_PASSWORD` of at least 14 characters. Set `ADMIN_BOOTSTRAP_ENABLED=true` only while provisioning the admin, then set it to `false` and redeploy.
 
-- `/api/health` reports whether database, mailer, and Paystack credentials are present. It does not guarantee that an upstream provider is reachable. If products fail to load with a 502 response, inspect the API service logs and check IyonicDB availability and credentials.
-- Render's free web service may spin down after inactivity, which can make the first API request take longer. The storefront remains a static service.
-- After changing build settings or secrets, redeploy the affected service. API URL references are applied during the static build.
+The server uses Render's `RENDER_EXTERNAL_URL` for verification links and payment callbacks. Configure Paystack's webhook as `https://skateboard-wz0h.onrender.com/api/payments/webhook`.
+
+## Deploy the storefront
+
+1. Push the repository changes to the GitHub branch connected to Render.
+2. Create or update the static site using this Blueprint (`render.yaml`), with the repository root as its root directory.
+3. Render runs `npm ci && npm run build` and publishes `dist/`. The generated `index.html` points to `https://skateboard-wz0h.onrender.com`.
+4. Copy the resulting static site's `onrender.com` origin into the backend's `FRONTEND_URL` and `CORS_ORIGIN`, then redeploy the backend.
+
+Check `https://skateboard-wz0h.onrender.com/api/health` to confirm the API responds. If product requests return 502 after the service is listening, check the API logs and its IyonicDB credentials/availability; the health endpoint reports configured credentials but does not validate upstream connectivity. Render free web services may spin down after inactivity, making the first request slower.
+
+Keep secrets in Render's Environment settings. Do not commit `.env` or put API keys into `render.yaml`.

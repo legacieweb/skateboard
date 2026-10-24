@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const output = path.join(root, 'dist');
-const apiBase = (process.env.API_BASE_URL || 'http://localhost:4173').replace(/\/$/, '');
+const apiBase = (process.env.API_BASE_URL || 'https://skateboard-wz0h.onrender.com').replace(/\/$/, '');
 
 await mkdir(output, { recursive: true });
 const html = await readFile(path.join(root, 'index.html'), 'utf8');

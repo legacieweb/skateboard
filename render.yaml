@@ -1,54 +1,5 @@
 services:
   - type: web
-    name: roll-call-api
-    runtime: node
-    plan: free
-    buildCommand: npm ci
-    startCommand: npm start
-    healthCheckPath: /api/health
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: HOST
-        value: 0.0.0.0
-      - key: PAYSTACK_CURRENCY
-        value: KES
-      - key: IYONICDB_URL
-        value: https://api.iyonicorp.com/api/iyonicdb/v1
-      - key: IYONICDB_API_KEY
-        sync: false
-      - key: IYONIC_MAILER_API_URL
-        value: https://api.iyonicorp.com/api/mailer/v1
-      - key: IYONIC_MAILER_API_KEY
-        sync: false
-      - key: MAIL_FROM_NAME
-        value: Roll Call
-      - key: MAIL_FROM_EMAIL
-        sync: false
-      - key: PAYSTACK_PUBLIC_KEY
-        sync: false
-      - key: PAYSTACK_SECRET_KEY
-        sync: false
-      - key: ADMIN_EMAIL
-        sync: false
-      - key: ADMIN_PASSWORD
-        sync: false
-      - key: ADMIN_BOOTSTRAP_ENABLED
-        value: "true"
-      - key: SESSION_DAYS
-        value: "7"
-      - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: roll-call-shop
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: CORS_ORIGIN
-        fromService:
-          type: web
-          name: roll-call-shop
-          envVarKey: RENDER_EXTERNAL_URL
-
-  - type: web
     name: roll-call-shop
     runtime: static
     plan: free
@@ -56,7 +7,4 @@ services:
     staticPublishPath: dist
     envVars:
       - key: API_BASE_URL
-        fromService:
-          type: web
-          name: roll-call-api
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://skateboard-wz0h.onrender.com

@@ -1,8 +1,8 @@
 # Roll Call shop
 
-For the full Render Blueprint setup, see [RENDER_DEPLOY.md](RENDER_DEPLOY.md). It deploys the API and static storefront as separate services and connects their URLs automatically.
+For the Render deployment steps, see [RENDER_DEPLOY.md](RENDER_DEPLOY.md). The backend runs at `https://skateboard-wz0h.onrender.com`; the Blueprint deploys the storefront separately and builds it with that API URL.
 
-The storefront is a static site: publish `index.html`, `styles.css`, `shop.js`, and `account.js` on any static host. The Node service in `server.js` is API-only and connects to IyonicDB, IyonicMailer, and Paystack. For local work, start the backend with `npm start`; `index.html` is configured for `http://localhost:4173` and can be opened directly from disk. The local `.env` uses `CORS_ORIGIN=null` so file pages can call the API. For deployment, set the `rollcall-api-base` meta tag to the backend API origin (for example, `https://api.example.com`) and set `CORS_ORIGIN` to the static site's exact HTTPS origin; do not use `null` outside local development. Product catalog entries are managed in IyonicDB and existing products can be edited from the admin dashboard.
+The storefront is a static site: publish `index.html`, `styles.css`, `shop.js`, and `account.js` on any static host. The Node service in `server.js` is API-only and connects to IyonicDB, IyonicMailer, and Paystack. For local work, start the backend with `npm start`; the static build defaults to the Render backend URL and can be overridden with `API_BASE_URL`. Set `FRONTEND_URL` and `CORS_ORIGIN` to the static site's exact HTTPS origin in the API service. Product catalog entries are managed in IyonicDB and existing products can be edited from the admin dashboard.
 
 ## Server configuration
 
