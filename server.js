@@ -20,7 +20,8 @@ for (const [key, value] of Object.entries(process.env)) if (value !== undefined)
 const config = {
   port: Number(env.PORT || 4173),
   host: env.HOST || '127.0.0.1',
-  baseUrl: (env.PUBLIC_BASE_URL || `http://localhost:${env.PORT || 4173}`).replace(/\/$/, ''),
+  baseUrl: (env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || `http://localhost:${env.PORT || 4173}`).replace(/\/$/, ''),
+  frontendUrl: (env.FRONTEND_URL || '').replace(/\/$/, ''),
   corsOrigin: env.CORS_ORIGIN || '',
   dbUrl: (env.IYONICDB_URL || 'https://api.iyonicorp.com/api/iyonicdb/v1').replace(/\/$/, ''),
   dbKey: env.IYONICDB_API_KEY || '',
@@ -247,7 +248,7 @@ async function route(req, res) {
     const given = url.searchParams.get('token') || ''; const users = await listDocs('users'); const user = users.find(item => item.verificationTokenHash === hashToken(given));
     if (!user || !user.verificationExpiresAt || user.verificationExpiresAt < isoNow()) throw new HttpError(400, 'This verification link is invalid or has expired.');
     await patchDoc('users', recordId(user), current => ({ ...current, emailVerified: true, verificationTokenHash: null, verificationExpiresAt: null, verifiedAt: isoNow(), updatedAt: isoNow() }));
-    res.writeHead(302, { Location: `${config.baseUrl}/#account?verified=1`, 'Cache-Control': 'no-store' }); return res.end();
+    res.writeHead(302, { Location: `${config.frontendUrl || config.baseUrl}/#account?verified=1`, 'Cache-Control': 'no-store' }); return res.end();
   }
   if (method === 'POST' && url.pathname === '/api/auth/resend-verification') {
     throttle(req, 'resend-verification', 3);
@@ -271,7 +272,7 @@ async function route(req, res) {
       if (user) {
         const resetToken = token();
         await patchDoc('users', recordId(user), current => ({ ...current, resetTokenHash: hashToken(resetToken), resetExpiresAt: new Date(Date.now() + 3600000).toISOString(), updatedAt: isoNow() }));
-        const link = `${config.baseUrl}/#reset-password?token=${encodeURIComponent(resetToken)}`;
+        const link = `${config.frontendUrl || config.baseUrl}/#reset-password?token=${encodeURIComponent(resetToken)}`;
         await sendMail(email, 'Reset your Roll Call password', `Choose a new password within one hour: ${link}`, `<h1>Reset your password.</h1><p><a href="${escapeHtml(link)}">Choose a new password</a>. This link expires in one hour.</p>`).catch(error => console.error('Password reset email could not be sent:', error.message));
       }
     }
@@ -373,7 +374,7 @@ async function route(req, res) {
   if (method === 'GET' && url.pathname === '/api/payments/callback') {
     const reference = url.searchParams.get('reference') || ''; if (!reference) throw new HttpError(400, 'Payment reference is missing.');
     const payment = await verifyPaystack(reference); const order = await markPaymentPaid(reference, payment);
-    res.writeHead(302, { Location: `${config.baseUrl}/#payment?reference=${encodeURIComponent(reference)}&order=${encodeURIComponent(order.orderNumber)}`, 'Cache-Control': 'no-store' }); return res.end();
+    res.writeHead(302, { Location: `${config.frontendUrl || config.baseUrl}/#payment?reference=${encodeURIComponent(reference)}&order=${encodeURIComponent(order.orderNumber)}`, 'Cache-Control': 'no-store' }); return res.end();
   }
   if (method === 'POST' && url.pathname === '/api/payments/webhook') {
     const { raw, data } = await readBody(req); const signature = req.headers['x-paystack-signature'];
