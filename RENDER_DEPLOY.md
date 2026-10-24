@@ -1,6 +1,6 @@
 # Deploy Roll Call on Render
 
-The backend API is the existing Render service at `https://skateboard-wz0h.onrender.com`; the live storefront is `https://rollcall.iyonicorp.com`. The server now allows that storefront origin for credentialed API requests and redirects account/payment flows back to it by default. The `render.yaml` also configures the storefront build to use that backend API URL.
+The backend API is the existing Render service at `https://skateboard-wz0h.onrender.com`; the live storefront is `https://rollcall.iyonicorp.com`. The server always allows that storefront origin for credentialed API requests, even if Render has an old `CORS_ORIGIN` value, and redirects account/payment flows back to it by default. `CORS_ORIGIN` can contain additional comma-separated allowed origins. The `render.yaml` also configures the storefront build to use that backend API URL.
 
 ## Redeploy the backend
 

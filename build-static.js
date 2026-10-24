@@ -16,7 +16,7 @@ if (configuredHtml === html && !html.includes(`content="${apiBase}"`)) {
   throw new Error('Could not configure the rollcall-api-base meta tag in index.html');
 }
 await writeFile(path.join(output, 'index.html'), configuredHtml);
-for (const file of ['styles.css', 'shop.js', 'account.js']) {
+for (const file of ['styles.css', 'shop.js', 'account.js', 'favicon.svg', 'robots.txt', 'sitemap.xml']) {
   await copyFile(path.join(root, file), path.join(output, file));
 }
 console.log(`Built static storefront in dist/ (API: ${apiBase})`);

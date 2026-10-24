@@ -22,7 +22,7 @@ const config = {
   host: env.HOST || '0.0.0.0',
   baseUrl: (env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || `http://localhost:${env.PORT || 4173}`).replace(/\/$/, ''),
   frontendUrl: (env.FRONTEND_URL || 'https://rollcall.iyonicorp.com').replace(/\/$/, ''),
-  corsOrigin: (env.CORS_ORIGIN || 'https://rollcall.iyonicorp.com').replace(/\/$/, ''),
+  corsOrigins: new Set(['https://rollcall.iyonicorp.com', ...(env.CORS_ORIGIN || '').split(',')].map(origin => origin.trim().replace(/\/$/, '')).filter(Boolean)),
   dbUrl: (env.IYONICDB_URL || 'https://api.iyonicorp.com/api/iyonicdb/v1').replace(/\/$/, ''),
   dbKey: env.IYONICDB_API_KEY || '',
   mailUrl: (env.IYONIC_MAILER_API_URL || 'https://api.iyonicorp.com/api/mailer/v1').replace(/\/$/, ''),
@@ -109,7 +109,7 @@ async function verifyPassword(password, user) {
   return stored.length === derived.length && timingSafeEqual(stored, derived);
 }
 function cookieValue(header, name) { return header.split(';').map(part => part.trim()).find(part => part.startsWith(`${name}=`))?.slice(name.length + 1) || ''; }
-function cookieHeader(value, maxAge) { const crossSite = Boolean(config.corsOrigin && config.baseUrl.startsWith('https:')); return `rc_session=${value}; Path=/; HttpOnly; SameSite=${crossSite ? 'None' : 'Lax'}; Max-Age=${maxAge}${config.baseUrl.startsWith('https:') ? '; Secure' : ''}`; }
+function cookieHeader(value, maxAge) { const crossSite = Boolean(config.corsOrigins.size && config.baseUrl.startsWith('https:')); return `rc_session=${value}; Path=/; HttpOnly; SameSite=${crossSite ? 'None' : 'Lax'}; Max-Age=${maxAge}${config.baseUrl.startsWith('https:') ? '; Secure' : ''}`; }
 async function createSession(userId) {
   const sessionToken = token(); const expiresAt = new Date(Date.now() + config.sessionDays * 86400000).toISOString();
   await saveDoc('sessions', { id: randomUUID(), userId, tokenHash: hashToken(sessionToken), expiresAt, createdAt: isoNow() });
@@ -215,10 +215,10 @@ async function route(req, res) {
   if (url.pathname.startsWith('/api/')) {
     const origin = req.headers.origin;
     const sameOrigin = origin && origin !== 'null' && origin === new URL(config.baseUrl).origin;
-    const configuredOrigin = origin && config.corsOrigin && origin === config.corsOrigin;
+    const configuredOrigin = origin && config.corsOrigins.has(origin);
     if (origin && !sameOrigin && !configuredOrigin) throw new HttpError(403, 'Request origin is not allowed.');
     if (configuredOrigin) {
-      res.setHeader('Access-Control-Allow-Origin', config.corsOrigin);
+      res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Vary', 'Origin');
     }
@@ -302,7 +302,7 @@ async function route(req, res) {
       await sendMail(user.email, 'New sign-in to your Roll Call account', `Hi ${user.name}, a sign-in to your Roll Call account was completed on ${signedInAt} (East Africa Time). If this was you, no action is needed. If you don’t recognize this sign-in, reset your password and contact the shop team.`, `<div style="margin:0;background:#f3f0e8;padding:32px 16px;font-family:Arial,sans-serif;color:#171916"><div style="max-width:560px;margin:auto;background:#fff;padding:32px;border-top:6px solid #ff5836"><p style="font-size:12px;letter-spacing:2px;color:#777">ROLL CALL · SECURITY</p><h1 style="font-size:28px">New account sign-in</h1><p>Hi ${escapeHtml(user.name)}, your Roll Call account was signed in at <strong>${escapeHtml(signedInAt)} EAT</strong>.</p><p>If this was you, no action is needed. If you don’t recognize this sign-in, reset your password and contact the shop team.</p></div></div>`);
       loginEmailSent = true;
     } catch (error) { console.error('Login activity email could not be sent:', error.message); }
-    return json(res, 200, { user: safeUser(user), loginEmailSent, ...(!loginEmailSent ? { loginEmailNotice: 'You are signed in, but we could not send the sign-in alert email.' } : {}), ...(req.headers.origin === 'null' && config.corsOrigin === 'null' ? { sessionToken } : {}) }, { 'Set-Cookie': cookieHeader(sessionToken, config.sessionDays * 86400) });
+    return json(res, 200, { user: safeUser(user), loginEmailSent, ...(!loginEmailSent ? { loginEmailNotice: 'You are signed in, but we could not send the sign-in alert email.' } : {}), ...(req.headers.origin === 'null' && config.corsOrigins.has('null') ? { sessionToken } : {}) }, { 'Set-Cookie': cookieHeader(sessionToken, config.sessionDays * 86400) });
   }
   if (method === 'POST' && url.pathname === '/api/auth/logout') {
     const sessionToken = String(req.headers.authorization || '').match(/^Bearer\s+(.+)$/i)?.[1] || cookieValue(req.headers.cookie || '', 'rc_session');

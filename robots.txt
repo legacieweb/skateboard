@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rollcall.iyonicorp.com/sitemap.xml
